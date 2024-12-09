@@ -213,7 +213,7 @@ def main():
 
     while True:
         game.reset()
-        print("Welkom bij Boter, Kaas en Eieren!")
+        print("Welkom bij Boter, Kaas, AI!")
         print("Je speelt als 'X'.")
         current_player = human_player if random.choice([True, False]) else ai_player
 
