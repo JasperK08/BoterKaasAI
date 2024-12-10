@@ -166,26 +166,27 @@ class TicTacToe:
         return None
 
     def ai_move(self, player):
-        # Eerst controleren of de AI de zet van de tegenstander moet blokkeren
-        block_move = self.block_opponent_move()
-        if block_move is not None:
-            self.make_move(block_move, player)
-            return block_move
-
-        # Als er geen blokkade nodig is, maak een zet volgens Q-learning
         state = self.get_state()
-
-        # Zorg ervoor dat de huidige staat in de Q-tabel staat
         if state not in self.q_table:
-            self.q_table[state] = [0.0] * 9  # Initialiseer met nullen
+            self.q_table[state] = [0.0] * 9  # Zorg ervoor dat dit een float-lijst is.
 
+        # Check for a winning move
+        for move in self.available_moves():
+            self.board[move] = player  # Simuleer de zet
+            if self.check_winner() == player:  # Controleer of deze zet de AI laat winnen
+                self.board[move] = ' '  # Reset de simulatie
+                self.make_move(move, player)  # Voer de winnende zet uit
+                return move
+            self.board[move] = ' '  # Reset de simulatie
+
+        # Explore or exploit Q-values
         if random.uniform(0, 1) < EXPLORATION_RATE:
             move = random.choice(self.available_moves())
         else:
-            q_values = np.array(self.q_table[state], dtype=float)
+            q_values = np.array(self.q_table[state], dtype=float)  # Zet expliciet om naar float-array.
             for i in range(9):
                 if i not in self.available_moves():
-                    q_values[i] = -float('inf')
+                    q_values[i] = -float('inf')  # Zet de niet-beschikbare zetten op -inf.
             move = int(np.argmax(q_values))
 
         self.make_move(move, player)
