@@ -167,10 +167,11 @@ class TicTacToe:
 
     def ai_move(self, player):
         state = self.get_state()
+        opponent = 'X' if player == 'O' else 'O'  # Bepaal de tegenstander
         if state not in self.q_table:
             self.q_table[state] = [0.0] * 9  # Zorg ervoor dat dit een float-lijst is.
 
-        # Check for a winning move
+        # Check for a winning move for the AI
         for move in self.available_moves():
             self.board[move] = player  # Simuleer de zet
             if self.check_winner() == player:  # Controleer of deze zet de AI laat winnen
@@ -178,6 +179,37 @@ class TicTacToe:
                 self.make_move(move, player)  # Voer de winnende zet uit
                 return move
             self.board[move] = ' '  # Reset de simulatie
+
+        # Check for a move to block the opponent from winning
+        for move in self.available_moves():
+            self.board[move] = opponent  # Simuleer een zet van de tegenstander
+            if self.check_winner() == opponent:  # Controleer of de tegenstander zou winnen
+                self.board[move] = ' '  # Reset de simulatie
+                self.make_move(move, player)  # Blokkeer de zet van de tegenstander
+                return move
+            self.board[move] = ' '  # Reset de simulatie
+
+        # Take the center if the opponent picked a corner and the center is free
+        corners = [0, 2, 6, 8]  # Indices voor hoeken (1, 3, 7, 9 in user input)
+        center = 4  # Index voor het midden (plek 5 in user input)
+        if center in self.available_moves():
+            for corner in corners:
+                if self.board[corner] == opponent:  # Als de tegenstander een hoek heeft genomen
+                    self.make_move(center, player)  # Neem het midden
+                    return center
+
+        # Explore or exploit Q-values
+        if random.uniform(0, 1) < EXPLORATION_RATE:
+            move = random.choice(self.available_moves())  # Kies willekeurig
+        else:
+            q_values = np.array(self.q_table[state], dtype=float)  # Zet expliciet om naar float-array.
+            for i in range(9):
+                if i not in self.available_moves():
+                    q_values[i] = -float('inf')  # Zet de niet-beschikbare zetten op -inf.
+            move = int(np.argmax(q_values))  # Kies de zet met de hoogste Q-waarde
+
+        self.make_move(move, player)
+        return move
 
         # Explore or exploit Q-values
         if random.uniform(0, 1) < EXPLORATION_RATE:
